@@ -1,9 +1,9 @@
 package tests;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.http.ContentType;
-import models.registration.ExistingUserResponseModel;
-import models.registration.RegistrationBodyModel;
-import models.registration.RegistrationResponseModel;
+import models.registration.*;
 import net.datafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,10 +47,10 @@ public class RegistrationTests {
     }
 
     @Test
-    public void negativeRegistration500Test() {
-        
-        String data = "{\"username\": \"" + username + "\",\n" +
-                "  \"password\": \"" + password + "\"}";
+    public void registrationWithoutTrailingSlash301Test() {
+
+        RegistrationBodyModel data =
+                new RegistrationBodyModel(username, password);
 
         given()
                 .log().all()
@@ -60,35 +60,42 @@ public class RegistrationTests {
                 .post("https://book-club.qa.guru/api/v1/users/register")
                 .then()
                 .log().all()
-                .statusCode(500)
-                .body("username", is(username))
-                .body("id", notNullValue());
-
+                .statusCode(301);
     }
 
     @Test
-    public void unsupportedMediaType415Test() {
-        
-        String data = "{\"username\": \"" + username + "\",\n" +
-                "  \"password\": \"" + password + "\"}";
+    public void unsupportedMediaType415Test() throws JsonProcessingException {
 
-        given()
+        RegistrationBodyModel data =
+                new RegistrationBodyModel(username, password);
+
+        String body = new ObjectMapper().writeValueAsString(data);
+
+        UnsupportedMediaTypeResponseModel response = given()
                 .log().all()
-                .contentType(ContentType.JSON)
-                .body(data)
+                .contentType(ContentType.TEXT)
+                .body(body)
                 .when()
                 .post("https://book-club.qa.guru/api/v1/users/register/")
                 .then()
                 .log().all()
                 .statusCode(415)
-                .body("username", contains("Enter a valid username. This value may contain only letters, numbers, and @/./+/-/_ characters."));
+                .extract()
+                .as(UnsupportedMediaTypeResponseModel.class);
+
+        String expectedError =
+                "Unsupported media type \"text/plain; charset=ISO-8859-1\" in request.";
+
+        assertEquals(expectedError, response.detail());
     }
 
     @Test
     public void invalidUsername400Test() {
-        
-        String data = "{\"username\": \"" + username + "\",\n" +
-                "  \"password\": \"" + password + "\"}";
+
+        String invalidUsername = "invalid username";
+
+        RegistrationBodyModel data =
+                new RegistrationBodyModel(invalidUsername, password);
 
         given()
                 .log().all()
@@ -99,7 +106,10 @@ public class RegistrationTests {
                 .then()
                 .log().all()
                 .statusCode(400)
-                .body("username", contains("Enter a valid username. This value may contain only letters, numbers, and @/./+/-/_ characters."));
+                .body(
+                        "username",
+                        contains("Enter a valid username. This value may contain only letters, numbers, and @/./+/-/_ characters.")
+                );
     }
 
     @Test
@@ -107,7 +117,7 @@ public class RegistrationTests {
 
         RegistrationBodyModel data = new RegistrationBodyModel(username, password);
 
-        RegistrationResponseModel registrationResponse = given()
+        given()
                 .log().all()
                 .contentType(ContentType.JSON)
                 .body(data)
@@ -115,9 +125,7 @@ public class RegistrationTests {
                 .post("https://book-club.qa.guru/api/v1/users/register/")
                 .then()
                 .log().all()
-                .statusCode(201)
-                .extract()
-                .as(RegistrationResponseModel.class);
+                .statusCode(201);
 
         ExistingUserResponseModel response = given()
                 .log().all()
