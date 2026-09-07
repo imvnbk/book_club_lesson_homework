@@ -12,7 +12,8 @@ dependencies {
             "io.rest-assured:json-schema-validator:6.0.0",
             "org.junit.jupiter:junit-jupiter:5.14.3",
             "net.datafaker:datafaker:2.7.0",
-            "com.fasterxml.jackson.core:jackson-databind:2.22.2"
+            "com.fasterxml.jackson.core:jackson-databind:2.22.2",
+            "org.assertj:assertj-core:3.27.7"
     )
 }
 
