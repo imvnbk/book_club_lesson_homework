@@ -1,15 +1,13 @@
 package tests;
 
-import io.restassured.http.ContentType;
 import models.login.LoginRequestModel;
 import models.login.SuccessfulLoginResponseModel;
 import models.login.WrongCredentialsLoginResponseModel;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
-import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInClasspath;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.notNullValue;
+import static specs.login.LoginSpec.*;
 
 public class LoginTests extends TestBase {
 
@@ -22,20 +20,12 @@ public class LoginTests extends TestBase {
 
         LoginRequestModel data = new LoginRequestModel(username, password);
 
-        SuccessfulLoginResponseModel loginResponse = given()
-                .log().all()
-                .contentType(ContentType.JSON)
+        SuccessfulLoginResponseModel loginResponse = given(loginRequestSpec)
                 .body(data)
                 .when()
-                .basePath("api/v1/")
                 .post("auth/token/")
                 .then()
-                .log().all()
-                .statusCode(200)
-                .body(matchesJsonSchemaInClasspath(
-                        "schemas/successful_login_response_schema.json"))
-                .body("refresh", notNullValue())
-                .body("access", notNullValue())
+                .spec(successfulLoginResponseSpec)
                 .extract().as(SuccessfulLoginResponseModel.class);
 
         String expectedTokenPath = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9";
@@ -52,19 +42,12 @@ public class LoginTests extends TestBase {
 
         LoginRequestModel data = new LoginRequestModel(username, wrongPassword);
 
-        WrongCredentialsLoginResponseModel loginResponse = given()
-                .log().all()
-                .contentType(ContentType.JSON)
+        WrongCredentialsLoginResponseModel loginResponse = given(loginRequestSpec)
                 .body(data)
                 .when()
-                .basePath("api/v1/")
                 .post("auth/token/")
                 .then()
-                .log().all()
-                .statusCode(401)
-                .body(matchesJsonSchemaInClasspath(
-                        "schemas/wrong_credentials_login_response_schema.json"))
-                .body("detail", notNullValue())
+                .spec(wrongCredentialsLoginResponseSpec)
                 .extract().as(WrongCredentialsLoginResponseModel.class);
 
         String expectedDetailError = "Invalid username or password.";

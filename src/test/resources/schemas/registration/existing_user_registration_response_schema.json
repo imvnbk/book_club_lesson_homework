@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "username"
+  ],
+  "properties": {
+    "username": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "const": "A user with that username already exists."
+      },
+      "minItems": 1
+    }
+  },
+  "additionalProperties": false
+}

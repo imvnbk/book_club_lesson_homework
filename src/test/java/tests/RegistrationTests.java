@@ -2,17 +2,16 @@ package tests;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.restassured.http.ContentType;
 import models.registration.*;
 import net.datafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
+import static specs.registration.RegistrationSpec.*;
 
-public class RegistrationTests {
+public class RegistrationTests extends TestBase{
 
     String username;
     String password;
@@ -28,22 +27,34 @@ public class RegistrationTests {
     @Test
     public void successfulRegistrationTest() {
 
-        RegistrationBodyModel data = new RegistrationBodyModel(username, password);
+        RegistrationBodyModel data =
+                new RegistrationBodyModel(username, password);
 
-        RegistrationResponseModel registrationResponse = given()
-                .log().all()
-                .contentType(ContentType.JSON)
+        RegistrationResponseModel registrationResponse = given(registrationRequestSpec)
                 .body(data)
                 .when()
-                .post("https://book-club.qa.guru/api/v1/users/register/")
+                .post("users/register/")
                 .then()
-                .log().all()
-                .statusCode(201)
+                .spec(successfulRegistrationResponseSpec)
                 .extract()
                 .as(RegistrationResponseModel.class);
 
-        assertEquals(username, registrationResponse.username());
+        assertThat(registrationResponse.username())
+                .isEqualTo(username);
 
+        assertThat(registrationResponse.firstName())
+                .isEqualTo("");
+
+        assertThat(registrationResponse.lastName())
+                .isEqualTo("");
+
+        assertThat(registrationResponse.email())
+                .isEqualTo("");
+
+        assertThat(registrationResponse.remoteAddr())
+                .isNotNull()
+                .isNotBlank()
+                .matches("\\d{1,3}(\\.\\d{1,3}){3}");
     }
 
     @Test
@@ -52,15 +63,17 @@ public class RegistrationTests {
         RegistrationBodyModel data =
                 new RegistrationBodyModel(username, password);
 
-        given()
-                .log().all()
-                .contentType(ContentType.JSON)
+        String location = given(registrationRequestSpec)
                 .body(data)
                 .when()
-                .post("https://book-club.qa.guru/api/v1/users/register")
+                .post("users/register")
                 .then()
-                .log().all()
-                .statusCode(301);
+                .spec(withoutTrailingSlashRegistrationResponseSpec)
+                .extract()
+                .header("Location");
+
+        assertThat(location)
+                .contains("/api/v1/users/register/");
     }
 
     @Test
@@ -71,22 +84,20 @@ public class RegistrationTests {
 
         String body = new ObjectMapper().writeValueAsString(data);
 
-        UnsupportedMediaTypeResponseModel response = given()
-                .log().all()
-                .contentType(ContentType.TEXT)
+        UnsupportedMediaTypeResponseModel response = given(unsupportedMediaTypeRegistrationRequestSpec)
                 .body(body)
                 .when()
-                .post("https://book-club.qa.guru/api/v1/users/register/")
+                .post("users/register/")
                 .then()
                 .log().all()
-                .statusCode(415)
+                .spec(unsupportedMediaTypeRegistrationResponseSpec)
                 .extract()
                 .as(UnsupportedMediaTypeResponseModel.class);
 
         String expectedError =
                 "Unsupported media type \"text/plain; charset=ISO-8859-1\" in request.";
 
-        assertEquals(expectedError, response.detail());
+        assertThat(expectedError).isEqualTo(response.detail());
     }
 
     @Test
@@ -97,18 +108,18 @@ public class RegistrationTests {
         RegistrationBodyModel data =
                 new RegistrationBodyModel(invalidUsername, password);
 
-        given()
-                .log().all()
-                .contentType(ContentType.JSON)
+        String actualError = given(registrationRequestSpec)
                 .body(data)
                 .when()
-                .post("https://book-club.qa.guru/api/v1/users/register/")
+                .post("users/register/")
                 .then()
-                .log().all()
-                .statusCode(400)
-                .body(
-                        "username",
-                        contains("Enter a valid username. This value may contain only letters, numbers, and @/./+/-/_ characters.")
+                .spec(invalidUsernameRegistrationResponseSpec)
+                .extract()
+                .path("username[0]");
+
+        assertThat(actualError)
+                .isEqualTo(
+                        "Enter a valid username. This value may contain only letters, numbers, and @/./+/-/_ characters."
                 );
     }
 
@@ -117,29 +128,23 @@ public class RegistrationTests {
 
         RegistrationBodyModel data = new RegistrationBodyModel(username, password);
 
-        given()
-                .log().all()
-                .contentType(ContentType.JSON)
+        given(registrationRequestSpec)
                 .body(data)
                 .when()
-                .post("https://book-club.qa.guru/api/v1/users/register/")
+                .post("users/register/")
                 .then()
-                .log().all()
-                .statusCode(201);
+                .spec(successfulRegistrationResponseSpec);
 
-        ExistingUserResponseModel response = given()
-                .log().all()
-                .contentType(ContentType.JSON)
+        ExistingUserResponseModel response = given(registrationRequestSpec)
                 .body(data)
                 .when()
-                .post("https://book-club.qa.guru/api/v1/users/register/")
+                .post("users/register/")
                 .then()
-                .log().all()
-                .statusCode(400)
+                .spec(existingUserRegistrationResponseSpec)
                 .extract()
                 .as(ExistingUserResponseModel.class);
-                String expectedError =  "A user with that username already exists.";
-                assertEquals(expectedError, response.username().get(0));
 
+        String expectedError =  "A user with that username already exists.";
+                assertThat(expectedError).isEqualTo(response.username().get(0));
     }
 }

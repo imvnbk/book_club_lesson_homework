@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "username"
+  ],
+  "properties": {
+    "username": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "const": "Enter a valid username. This value may contain only letters, numbers, and @/./+/-/_ characters."
+      },
+      "minItems": 1
+    }
+  },
+  "additionalProperties": false
+}
