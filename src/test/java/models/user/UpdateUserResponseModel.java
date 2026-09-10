@@ -1,4 +1,4 @@
-package specs.user;
+package models.user;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 

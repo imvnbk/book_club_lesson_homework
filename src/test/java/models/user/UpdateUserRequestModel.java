@@ -1,4 +1,4 @@
-package specs.user;
+package models.user;
 
 public record UpdateUserRequestModel(
         String firstName,
