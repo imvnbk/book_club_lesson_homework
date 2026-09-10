@@ -4,11 +4,11 @@ import models.login.LoginRequestModel;
 import models.login.SuccessfulLoginResponseModel;
 import models.user.UpdateUserRequestModel;
 import models.user.UpdateUserResponseModel;
-import net.datafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import static data.TestData.*;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static specs.login.LoginSpec.loginRequestSpec;
@@ -18,19 +18,15 @@ import static specs.user.UpdateUserSpec.updateUserRequestSpec;
 
 public class UpdateUserTests extends TestBase {
 
-    private final String username = "qaguru";
-    private final String password = "qaguru123";
     private String firstName;
     private String lastName;
     private String email;
 
     @BeforeEach
     public void prepareTestData() {
-        Faker faker = new Faker();
-
-        firstName = faker.name().firstName();
-        lastName = faker.name().lastName();
-        email = faker.internet().emailAddress();
+        firstName = randomFirstName();
+        lastName = randomLastName();
+        email = randomEmail();
     }
 
     @Test
@@ -38,7 +34,7 @@ public class UpdateUserTests extends TestBase {
     public void successfulUpdateUserTest() {
 
         LoginRequestModel data =
-                new LoginRequestModel(username, password);
+                new LoginRequestModel(USERNAME, PASSWORD);
 
         SuccessfulLoginResponseModel loginResponse = given(loginRequestSpec)
                 .body(data)

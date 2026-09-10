@@ -6,21 +6,18 @@ import models.login.WrongCredentialsLoginResponseModel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import static data.TestData.*;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static specs.login.LoginSpec.*;
 
 public class LoginTests extends TestBase {
 
-    String username = "qaguru";
-    String password = "qaguru123";
-    String wrongPassword = "wrongPassword";
-
     @Test
     @DisplayName("Успешная авторизация с валидными учетными данными")
     public void successfulLoginTest() {
 
-        LoginRequestModel data = new LoginRequestModel(username, password);
+        LoginRequestModel data = new LoginRequestModel(USERNAME, PASSWORD);
 
         SuccessfulLoginResponseModel loginResponse = given(loginRequestSpec)
                 .body(data)
@@ -30,12 +27,11 @@ public class LoginTests extends TestBase {
                 .spec(successfulLoginResponseSpec)
                 .extract().as(SuccessfulLoginResponseModel.class);
 
-        String expectedTokenPath = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9";
         String actualAccess = loginResponse.access();
         String actualRefresh = loginResponse.refresh();
 
-        assertThat(actualAccess).startsWith(expectedTokenPath);
-        assertThat(actualRefresh).startsWith(expectedTokenPath);
+        assertThat(actualAccess).startsWith(JWT_PREFIX);
+        assertThat(actualRefresh).startsWith(JWT_PREFIX);
         assertThat(actualAccess).isNotEqualTo(actualRefresh);
     }
 
@@ -43,7 +39,7 @@ public class LoginTests extends TestBase {
     @DisplayName("Ошибка авторизации с неверным паролем")
     public void wrongCredentialsTest() {
 
-        LoginRequestModel data = new LoginRequestModel(username, wrongPassword);
+        LoginRequestModel data = new LoginRequestModel(USERNAME, WRONG_PASSWORD);
 
         WrongCredentialsLoginResponseModel loginResponse = given(loginRequestSpec)
                 .body(data)
@@ -53,9 +49,8 @@ public class LoginTests extends TestBase {
                 .spec(wrongCredentialsLoginResponseSpec)
                 .extract().as(WrongCredentialsLoginResponseModel.class);
 
-        String expectedDetailError = "Invalid username or password.";
         String actualDetailError = loginResponse.detail();
 
-        assertThat(actualDetailError).isEqualTo(expectedDetailError);
+        assertThat(actualDetailError).isEqualTo(INVALID_CREDENTIALS_ERROR);
     }
 }

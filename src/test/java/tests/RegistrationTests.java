@@ -3,11 +3,11 @@ package tests;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import models.registration.*;
-import net.datafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import static data.TestData.*;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static specs.registration.RegistrationSpec.*;
@@ -19,10 +19,8 @@ public class RegistrationTests extends TestBase{
 
     @BeforeEach
     public void prepareTestData(){
-        Faker faker = new Faker();
-
-        username = faker.name().firstName();
-        password = faker.name().firstName();
+        username = randomFirstName();
+        password = randomFirstName();
     }
 
     @Test
@@ -56,7 +54,7 @@ public class RegistrationTests extends TestBase{
         assertThat(registrationResponse.remoteAddr())
                 .isNotNull()
                 .isNotBlank()
-                .matches("\\d{1,3}(\\.\\d{1,3}){3}");
+                .matches(IP_ADDRESS_REGEX);
     }
 
     @Test
@@ -76,7 +74,7 @@ public class RegistrationTests extends TestBase{
                 .header("Location");
 
         assertThat(location)
-                .contains("/api/v1/users/register/");
+                .contains(REGISTER_LOCATION_PATH);
     }
 
     @Test
@@ -93,25 +91,19 @@ public class RegistrationTests extends TestBase{
                 .when()
                 .post("users/register/")
                 .then()
-                .log().all()
                 .spec(unsupportedMediaTypeRegistrationResponseSpec)
                 .extract()
                 .as(UnsupportedMediaTypeResponseModel.class);
 
-        String expectedError =
-                "Unsupported media type \"text/plain; charset=ISO-8859-1\" in request.";
-
-        assertThat(expectedError).isEqualTo(response.detail());
+        assertThat(UNSUPPORTED_MEDIA_TYPE_ERROR).isEqualTo(response.detail());
     }
 
     @Test
     @DisplayName("Ошибка 400 при регистрации с невалидным username")
     public void invalidUsername400Test() {
 
-        String invalidUsername = "invalid username";
-
         RegistrationBodyModel data =
-                new RegistrationBodyModel(invalidUsername, password);
+                new RegistrationBodyModel(INVALID_USERNAME, password);
 
         String actualError = given(registrationRequestSpec)
                 .body(data)
@@ -123,9 +115,7 @@ public class RegistrationTests extends TestBase{
                 .path("username[0]");
 
         assertThat(actualError)
-                .isEqualTo(
-                        "Enter a valid username. This value may contain only letters, numbers, and @/./+/-/_ characters."
-                );
+                .isEqualTo(INVALID_USERNAME_ERROR);
     }
 
     @Test
@@ -150,7 +140,6 @@ public class RegistrationTests extends TestBase{
                 .extract()
                 .as(ExistingUserResponseModel.class);
 
-        String expectedError =  "A user with that username already exists.";
-                assertThat(expectedError).isEqualTo(response.username().get(0));
+        assertThat(EXISTING_USER_ERROR).isEqualTo(response.username().get(0));
     }
 }

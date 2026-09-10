@@ -8,6 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import specs.logout.EmptyRequestModel;
 
+import static data.TestData.*;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static specs.login.LoginSpec.loginRequestSpec;
@@ -16,14 +17,11 @@ import static specs.logout.LogoutSpec.*;
 
 public class LogoutTests extends TestBase {
 
-    String username = "qaguru";
-    String password = "qaguru123";
-
     @Test
     @DisplayName("Успешный логаут из системы")
     public void successfulLogoutTest() {
 
-        LoginRequestModel data = new LoginRequestModel(username, password);
+        LoginRequestModel data = new LoginRequestModel(USERNAME, PASSWORD);
 
         String refreshToken = given(loginRequestSpec)
                 .body(data)
@@ -49,7 +47,7 @@ public class LogoutTests extends TestBase {
                 .extract()
                 .asString();
 
-        assertThat(responseBody).isEqualTo("{}");
+        assertThat(responseBody).isEqualTo(EMPTY_JSON_BODY);
     }
 
     @Test
@@ -57,7 +55,7 @@ public class LogoutTests extends TestBase {
     public void notValidTokenLogoutTest() {
 
         LoginRequestModel data =
-                new LoginRequestModel(username, password);
+                new LoginRequestModel(USERNAME, PASSWORD);
 
         String refreshToken = given(loginRequestSpec)
                 .body(data)
@@ -87,10 +85,10 @@ public class LogoutTests extends TestBase {
                 .extract().as(NotValidTokenResponseModel.class);
 
         assertThat(responseBody.detail())
-                .isEqualTo("Token is blacklisted");
+                .isEqualTo(TOKEN_BLACKLISTED_ERROR);
 
         assertThat(responseBody.code())
-                .isEqualTo("token_not_valid");
+                .isEqualTo(TOKEN_NOT_VALID_CODE);
     }
 
     @Test
@@ -110,6 +108,6 @@ public class LogoutTests extends TestBase {
                 .as(EmptyRequestModel.class);
 
         assertThat(responseBody.refresh())
-                .containsExactly("This field may not be blank.");
+                .containsExactly(BLANK_FIELD_ERROR);
     }
 }
