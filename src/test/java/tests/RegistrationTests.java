@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import models.registration.*;
 import net.datafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
@@ -25,6 +26,7 @@ public class RegistrationTests extends TestBase{
     }
 
     @Test
+    @DisplayName("Успешная регистрация пользователя с валидными данными")
     public void successfulRegistrationTest() {
 
         RegistrationBodyModel data =
@@ -58,6 +60,7 @@ public class RegistrationTests extends TestBase{
     }
 
     @Test
+    @DisplayName("Редирект 301 при регистрации без завершающего слеша в URL")
     public void registrationWithoutTrailingSlash301Test() {
 
         RegistrationBodyModel data =
@@ -77,6 +80,7 @@ public class RegistrationTests extends TestBase{
     }
 
     @Test
+    @DisplayName("Ошибка 415 при отправке запроса с неподдерживаемым Content-Type")
     public void unsupportedMediaType415Test() throws JsonProcessingException {
 
         RegistrationBodyModel data =
@@ -101,6 +105,7 @@ public class RegistrationTests extends TestBase{
     }
 
     @Test
+    @DisplayName("Ошибка 400 при регистрации с невалидным username")
     public void invalidUsername400Test() {
 
         String invalidUsername = "invalid username";
@@ -124,6 +129,7 @@ public class RegistrationTests extends TestBase{
     }
 
     @Test
+    @DisplayName("Ошибка 400 при регистрации уже существующего пользователя")
     public void existingUser400Test() {
 
         RegistrationBodyModel data = new RegistrationBodyModel(username, password);

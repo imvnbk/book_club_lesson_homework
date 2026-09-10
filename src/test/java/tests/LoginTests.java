@@ -3,6 +3,7 @@ package tests;
 import models.login.LoginRequestModel;
 import models.login.SuccessfulLoginResponseModel;
 import models.login.WrongCredentialsLoginResponseModel;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
@@ -16,6 +17,7 @@ public class LoginTests extends TestBase {
     String wrongPassword = "wrongPassword";
 
     @Test
+    @DisplayName("Успешная авторизация с валидными учетными данными")
     public void successfulLoginTest() {
 
         LoginRequestModel data = new LoginRequestModel(username, password);
@@ -38,6 +40,7 @@ public class LoginTests extends TestBase {
     }
 
     @Test
+    @DisplayName("Ошибка авторизации с неверным паролем")
     public void wrongCredentialsTest() {
 
         LoginRequestModel data = new LoginRequestModel(username, wrongPassword);
