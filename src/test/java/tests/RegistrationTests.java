@@ -8,6 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static data.TestData.*;
+import static io.qameta.allure.Allure.step;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static specs.registration.RegistrationSpec.*;
@@ -30,31 +31,34 @@ public class RegistrationTests extends TestBase{
         RegistrationBodyModel data =
                 new RegistrationBodyModel(username, password);
 
-        RegistrationResponseModel registrationResponse = given(registrationRequestSpec)
-                .body(data)
-                .when()
-                .post("users/register/")
-                .then()
-                .spec(successfulRegistrationResponseSpec)
-                .extract()
-                .as(RegistrationResponseModel.class);
+        RegistrationResponseModel registrationResponse = step("Зарегистрировать нового пользователя с валидными данными", () ->
+                given(registrationRequestSpec)
+                        .body(data)
+                        .when()
+                        .post("users/register/")
+                        .then()
+                        .spec(successfulRegistrationResponseSpec)
+                        .extract()
+                        .as(RegistrationResponseModel.class));
 
-        assertThat(registrationResponse.username())
-                .isEqualTo(username);
+        step("Проверить данные зарегистрированного пользователя в ответе", () -> {
+            assertThat(registrationResponse.username())
+                    .isEqualTo(username);
 
-        assertThat(registrationResponse.firstName())
-                .isEqualTo("");
+            assertThat(registrationResponse.firstName())
+                    .isEqualTo("");
 
-        assertThat(registrationResponse.lastName())
-                .isEqualTo("");
+            assertThat(registrationResponse.lastName())
+                    .isEqualTo("");
 
-        assertThat(registrationResponse.email())
-                .isEqualTo("");
+            assertThat(registrationResponse.email())
+                    .isEqualTo("");
 
-        assertThat(registrationResponse.remoteAddr())
-                .isNotNull()
-                .isNotBlank()
-                .matches(IP_ADDRESS_REGEX);
+            assertThat(registrationResponse.remoteAddr())
+                    .isNotNull()
+                    .isNotBlank()
+                    .matches(IP_ADDRESS_REGEX);
+        });
     }
 
     @Test
@@ -64,17 +68,19 @@ public class RegistrationTests extends TestBase{
         RegistrationBodyModel data =
                 new RegistrationBodyModel(username, password);
 
-        String location = given(registrationRequestSpec)
-                .body(data)
-                .when()
-                .post("users/register")
-                .then()
-                .spec(withoutTrailingSlashRegistrationResponseSpec)
-                .extract()
-                .header("Location");
+        String location = step("Отправить запрос регистрации без завершающего слеша в URL", () ->
+                given(registrationRequestSpec)
+                        .body(data)
+                        .when()
+                        .post("users/register")
+                        .then()
+                        .spec(withoutTrailingSlashRegistrationResponseSpec)
+                        .extract()
+                        .header("Location"));
 
-        assertThat(location)
-                .contains(REGISTER_LOCATION_PATH);
+        step("Проверить, что заголовок Location содержит корректный путь", () ->
+                assertThat(location)
+                        .contains(REGISTER_LOCATION_PATH));
     }
 
     @Test
@@ -84,18 +90,21 @@ public class RegistrationTests extends TestBase{
         RegistrationBodyModel data =
                 new RegistrationBodyModel(username, password);
 
-        String body = new ObjectMapper().writeValueAsString(data);
+        String body = step("Сериализовать тело запроса в JSON", () ->
+                new ObjectMapper().writeValueAsString(data));
 
-        UnsupportedMediaTypeResponseModel response = given(unsupportedMediaTypeRegistrationRequestSpec)
-                .body(body)
-                .when()
-                .post("users/register/")
-                .then()
-                .spec(unsupportedMediaTypeRegistrationResponseSpec)
-                .extract()
-                .as(UnsupportedMediaTypeResponseModel.class);
+        UnsupportedMediaTypeResponseModel response = step("Отправить запрос регистрации с неподдерживаемым Content-Type", () ->
+                given(unsupportedMediaTypeRegistrationRequestSpec)
+                        .body(body)
+                        .when()
+                        .post("users/register/")
+                        .then()
+                        .spec(unsupportedMediaTypeRegistrationResponseSpec)
+                        .extract()
+                        .as(UnsupportedMediaTypeResponseModel.class));
 
-        assertThat(UNSUPPORTED_MEDIA_TYPE_ERROR).isEqualTo(response.detail());
+        step("Проверить сообщение об ошибке 415", () ->
+                assertThat(UNSUPPORTED_MEDIA_TYPE_ERROR).isEqualTo(response.detail()));
     }
 
     @Test
@@ -105,17 +114,19 @@ public class RegistrationTests extends TestBase{
         RegistrationBodyModel data =
                 new RegistrationBodyModel(INVALID_USERNAME, password);
 
-        String actualError = given(registrationRequestSpec)
-                .body(data)
-                .when()
-                .post("users/register/")
-                .then()
-                .spec(invalidUsernameRegistrationResponseSpec)
-                .extract()
-                .path("username[0]");
+        String actualError = step("Отправить запрос регистрации с невалидным username", () ->
+                given(registrationRequestSpec)
+                        .body(data)
+                        .when()
+                        .post("users/register/")
+                        .then()
+                        .spec(invalidUsernameRegistrationResponseSpec)
+                        .extract()
+                        .path("username[0]"));
 
-        assertThat(actualError)
-                .isEqualTo(INVALID_USERNAME_ERROR);
+        step("Проверить текст ошибки валидации username", () ->
+                assertThat(actualError)
+                        .isEqualTo(INVALID_USERNAME_ERROR));
     }
 
     @Test
@@ -124,22 +135,25 @@ public class RegistrationTests extends TestBase{
 
         RegistrationBodyModel data = new RegistrationBodyModel(username, password);
 
-        given(registrationRequestSpec)
-                .body(data)
-                .when()
-                .post("users/register/")
-                .then()
-                .spec(successfulRegistrationResponseSpec);
+        step("Зарегистрировать пользователя первый раз", () ->
+                given(registrationRequestSpec)
+                        .body(data)
+                        .when()
+                        .post("users/register/")
+                        .then()
+                        .spec(successfulRegistrationResponseSpec));
 
-        ExistingUserResponseModel response = given(registrationRequestSpec)
-                .body(data)
-                .when()
-                .post("users/register/")
-                .then()
-                .spec(existingUserRegistrationResponseSpec)
-                .extract()
-                .as(ExistingUserResponseModel.class);
+        ExistingUserResponseModel response = step("Повторно зарегистрировать того же пользователя", () ->
+                given(registrationRequestSpec)
+                        .body(data)
+                        .when()
+                        .post("users/register/")
+                        .then()
+                        .spec(existingUserRegistrationResponseSpec)
+                        .extract()
+                        .as(ExistingUserResponseModel.class));
 
-        assertThat(EXISTING_USER_ERROR).isEqualTo(response.username().get(0));
+        step("Проверить сообщение об ошибке уже существующего пользователя", () ->
+                assertThat(EXISTING_USER_ERROR).isEqualTo(response.username().get(0)));
     }
 }

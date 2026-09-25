@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import specs.logout.EmptyRequestModel;
 
 import static data.TestData.*;
+import static io.qameta.allure.Allure.step;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static specs.login.LoginSpec.loginRequestSpec;
@@ -23,31 +24,34 @@ public class LogoutTests extends TestBase {
 
         LoginRequestModel data = new LoginRequestModel(USERNAME, PASSWORD);
 
-        String refreshToken = given(loginRequestSpec)
-                .body(data)
-                .when()
-                .post("auth/token/")
-                .then()
-                .spec(successfulLoginResponseSpec)
-                .extract()
-                .path("refresh");
+        String refreshToken = step("Авторизоваться и получить refresh токен", () ->
+                given(loginRequestSpec)
+                        .body(data)
+                        .when()
+                        .post("auth/token/")
+                        .then()
+                        .spec(successfulLoginResponseSpec)
+                        .extract()
+                        .path("refresh"));
 
         LogoutRequestModel logoutData =
                 new LogoutRequestModel(refreshToken);
 
-        String responseBody = given()
-                .log().all()
-                .contentType(ContentType.JSON)
-                .basePath("api/v1/")
-                .body(logoutData)
-                .when()
-                .post("auth/logout/")
-                .then()
-                .spec(successfulLogoutResponseSpec)
-                .extract()
-                .asString();
+        String responseBody = step("Выполнить логаут с полученным refresh токеном", () ->
+                given()
+                        .log().all()
+                        .contentType(ContentType.JSON)
+                        .basePath("api/v1/")
+                        .body(logoutData)
+                        .when()
+                        .post("auth/logout/")
+                        .then()
+                        .spec(successfulLogoutResponseSpec)
+                        .extract()
+                        .asString());
 
-        assertThat(responseBody).isEqualTo(EMPTY_JSON_BODY);
+        step("Проверить, что тело ответа пустое", () ->
+                assertThat(responseBody).isEqualTo(EMPTY_JSON_BODY));
     }
 
     @Test
@@ -57,38 +61,43 @@ public class LogoutTests extends TestBase {
         LoginRequestModel data =
                 new LoginRequestModel(USERNAME, PASSWORD);
 
-        String refreshToken = given(loginRequestSpec)
-                .body(data)
-                .when()
-                .post("auth/token/")
-                .then()
-                .spec(successfulLoginResponseSpec)
-                .extract()
-                .path("refresh");
+        String refreshToken = step("Авторизоваться и получить refresh токен", () ->
+                given(loginRequestSpec)
+                        .body(data)
+                        .when()
+                        .post("auth/token/")
+                        .then()
+                        .spec(successfulLoginResponseSpec)
+                        .extract()
+                        .path("refresh"));
 
         LogoutRequestModel logoutData =
                 new LogoutRequestModel(refreshToken);
 
-        given(logoutRequestSpec)
-                .body(logoutData)
-                .when()
-                .post("auth/logout/")
-                .then()
-                .statusCode(200);
+        step("Выполнить первый логаут с refresh токеном", () ->
+                given(logoutRequestSpec)
+                        .body(logoutData)
+                        .when()
+                        .post("auth/logout/")
+                        .then()
+                        .statusCode(200));
 
-        NotValidTokenResponseModel responseBody = given(logoutRequestSpec)
-                .body(logoutData)
-                .when()
-                .post("auth/logout/")
-                .then()
-                .spec(notValidTokenResponseSpec)
-                .extract().as(NotValidTokenResponseModel.class);
+        NotValidTokenResponseModel responseBody = step("Повторно отправить логаут с уже использованным токеном", () ->
+                given(logoutRequestSpec)
+                        .body(logoutData)
+                        .when()
+                        .post("auth/logout/")
+                        .then()
+                        .spec(notValidTokenResponseSpec)
+                        .extract().as(NotValidTokenResponseModel.class));
 
-        assertThat(responseBody.detail())
-                .isEqualTo(TOKEN_BLACKLISTED_ERROR);
+        step("Проверить сообщение и код ошибки о невалидном токене", () -> {
+            assertThat(responseBody.detail())
+                    .isEqualTo(TOKEN_BLACKLISTED_ERROR);
 
-        assertThat(responseBody.code())
-                .isEqualTo(TOKEN_NOT_VALID_CODE);
+            assertThat(responseBody.code())
+                    .isEqualTo(TOKEN_NOT_VALID_CODE);
+        });
     }
 
     @Test
@@ -98,16 +107,18 @@ public class LogoutTests extends TestBase {
         LogoutRequestModel logoutData =
                 new LogoutRequestModel("");
 
-        EmptyRequestModel responseBody = given(logoutRequestSpec)
-                .body(logoutData)
-                .when()
-                .post("auth/logout/")
-                .then()
-                .spec(emptyBodyResponseSpec)
-                .extract()
-                .as(EmptyRequestModel.class);
+        EmptyRequestModel responseBody = step("Отправить логаут с пустым refresh токеном", () ->
+                given(logoutRequestSpec)
+                        .body(logoutData)
+                        .when()
+                        .post("auth/logout/")
+                        .then()
+                        .spec(emptyBodyResponseSpec)
+                        .extract()
+                        .as(EmptyRequestModel.class));
 
-        assertThat(responseBody.refresh())
-                .containsExactly(BLANK_FIELD_ERROR);
+        step("Проверить сообщение об ошибке валидации пустого поля", () ->
+                assertThat(responseBody.refresh())
+                        .containsExactly(BLANK_FIELD_ERROR));
     }
 }

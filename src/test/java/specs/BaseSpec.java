@@ -4,12 +4,14 @@ import io.restassured.builder.ResponseSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 
+import static allure.CustomAllureListener.withCustomTemplate;
 import static io.restassured.RestAssured.with;
 import static io.restassured.filter.log.LogDetail.ALL;
 
 public class BaseSpec {
 
     public static RequestSpecification baseRequestSpec = with()
+            .filter(withCustomTemplate())
             .log().all()
             .contentType(ContentType.JSON)
             .basePath("api/v1/");
