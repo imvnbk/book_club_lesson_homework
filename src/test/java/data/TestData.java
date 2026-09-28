@@ -30,10 +30,16 @@ public class TestData {
     public static final String UNSUPPORTED_MEDIA_TYPE_ERROR =
             "Unsupported media type \"text/plain; charset=ISO-8859-1\" in request.";
     public static final String EXISTING_USER_ERROR = "A user with that username already exists.";
+    public static final String AUTH_CREDENTIALS_NOT_PROVIDED_ERROR = "Authentication credentials were not provided.";
+    public static final String EXISTING_BOOK_TITLE_ERROR = "Book Club with this Book Title already exists.";
 
     // Random generators
     public static String randomFirstName() {
         return faker.name().firstName();
+    }
+
+    public static String randomUsername() {
+        return faker.name().firstName() + faker.number().digits(6);
     }
 
     public static String randomLastName() {
@@ -42,5 +48,25 @@ public class TestData {
 
     public static String randomEmail() {
         return faker.internet().emailAddress();
+    }
+
+    public static String randomBookTitle() {
+        return faker.book().title() + faker.number().digits(6);
+    }
+
+    public static String randomBookAuthors() {
+        return faker.book().author();
+    }
+
+    public static Integer randomPublicationYear() {
+        return faker.number().numberBetween(1500, 2026);
+    }
+
+    public static String randomDescription() {
+        return faker.lorem().sentence();
+    }
+
+    public static String randomTelegramChatLink() {
+        return "https://t.me/" + faker.internet().username();
     }
 }

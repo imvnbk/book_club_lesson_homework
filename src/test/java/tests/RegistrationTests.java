@@ -20,7 +20,7 @@ public class RegistrationTests extends TestBase{
 
     @BeforeEach
     public void prepareTestData(){
-        username = randomFirstName();
+        username = randomUsername();
         password = randomFirstName();
     }
 

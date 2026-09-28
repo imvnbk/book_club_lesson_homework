@@ -1,6 +1,7 @@
 package client;
 
 import io.restassured.response.ValidatableResponse;
+import models.clubs.ClubRequestModel;
 import models.login.LoginRequestModel;
 import models.logout.LogoutRequestModel;
 import models.registration.RegistrationBodyModel;
@@ -77,6 +78,56 @@ public class ApiClient {
                 .queryParam("page", page)
                 .when()
                 .get("clubs/")
+                .then();
+    }
+
+    public static ValidatableResponse createClub(String accessToken, ClubRequestModel data) {
+        return given(clubsRequestSpec)
+                .auth().oauth2(accessToken)
+                .body(data)
+                .when()
+                .post("clubs/")
+                .then();
+    }
+
+    public static ValidatableResponse createClub(ClubRequestModel data) {
+        return given(clubsRequestSpec)
+                .body(data)
+                .when()
+                .post("clubs/")
+                .then();
+    }
+
+    public static ValidatableResponse getClub(int id) {
+        return given(clubsRequestSpec)
+                .when()
+                .get("clubs/{id}/", id)
+                .then();
+    }
+
+    public static ValidatableResponse updateClub(String accessToken, int id, ClubRequestModel data) {
+        return given(clubsRequestSpec)
+                .auth().oauth2(accessToken)
+                .body(data)
+                .when()
+                .put("clubs/{id}/", id)
+                .then();
+    }
+
+    public static ValidatableResponse patchClub(String accessToken, int id, ClubRequestModel data) {
+        return given(clubsRequestSpec)
+                .auth().oauth2(accessToken)
+                .body(data)
+                .when()
+                .patch("clubs/{id}/", id)
+                .then();
+    }
+
+    public static ValidatableResponse deleteClub(String accessToken, int id) {
+        return given(clubsRequestSpec)
+                .auth().oauth2(accessToken)
+                .when()
+                .delete("clubs/{id}/", id)
                 .then();
     }
 }
