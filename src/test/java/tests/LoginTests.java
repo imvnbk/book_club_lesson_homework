@@ -1,5 +1,6 @@
 package tests;
 
+import client.ApiClient;
 import models.login.LoginRequestModel;
 import models.login.SuccessfulLoginResponseModel;
 import models.login.WrongCredentialsLoginResponseModel;
@@ -8,7 +9,6 @@ import org.junit.jupiter.api.Test;
 
 import static data.TestData.*;
 import static io.qameta.allure.Allure.step;
-import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static specs.login.LoginSpec.*;
 
@@ -21,11 +21,7 @@ public class LoginTests extends TestBase {
         LoginRequestModel data = new LoginRequestModel(USERNAME, PASSWORD);
 
         SuccessfulLoginResponseModel loginResponse = step("Отправить запрос авторизации с валидными учетными данными", () ->
-                given(loginRequestSpec)
-                        .body(data)
-                        .when()
-                        .post("auth/token/")
-                        .then()
+                ApiClient.login(data)
                         .spec(successfulLoginResponseSpec)
                         .extract().as(SuccessfulLoginResponseModel.class));
 
@@ -46,11 +42,7 @@ public class LoginTests extends TestBase {
         LoginRequestModel data = new LoginRequestModel(USERNAME, WRONG_PASSWORD);
 
         WrongCredentialsLoginResponseModel loginResponse = step("Отправить запрос авторизации с неверным паролем", () ->
-                given(loginRequestSpec)
-                        .body(data)
-                        .when()
-                        .post("auth/token/")
-                        .then()
+                ApiClient.login(data)
                         .spec(wrongCredentialsLoginResponseSpec)
                         .extract().as(WrongCredentialsLoginResponseModel.class));
 

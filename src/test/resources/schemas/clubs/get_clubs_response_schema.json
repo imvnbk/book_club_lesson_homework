@@ -1,0 +1,155 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "$ref": "#/definitions/ClubsPage",
+  "definitions": {
+    "ClubsPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "count": {
+          "type": "integer"
+        },
+        "next": {
+          "type": ["string", "null"]
+        },
+        "previous": {
+          "type": ["string", "null"]
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Club"
+          }
+        }
+      },
+      "required": [
+        "count",
+        "next",
+        "previous",
+        "results"
+      ],
+      "title": "ClubsPage"
+    },
+    "Club": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "bookTitle": {
+          "type": "string"
+        },
+        "bookAuthors": {
+          "type": "string"
+        },
+        "publicationYear": {
+          "type": "integer"
+        },
+        "description": {
+          "type": "string"
+        },
+        "telegramChatLink": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "integer"
+        },
+        "members": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "reviews": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Review"
+          }
+        },
+        "created": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "modified": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "bookAuthors",
+        "bookTitle",
+        "created",
+        "description",
+        "id",
+        "members",
+        "modified",
+        "owner",
+        "publicationYear",
+        "reviews",
+        "telegramChatLink"
+      ],
+      "title": "Club"
+    },
+    "Review": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "club": {
+          "type": "integer"
+        },
+        "user": {
+          "$ref": "#/definitions/ReviewUser"
+        },
+        "review": {
+          "type": "string"
+        },
+        "assessment": {
+          "type": "integer"
+        },
+        "readPages": {
+          "type": "integer"
+        },
+        "created": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "modified": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "assessment",
+        "club",
+        "created",
+        "id",
+        "modified",
+        "readPages",
+        "review",
+        "user"
+      ],
+      "title": "Review"
+    },
+    "ReviewUser": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "username": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "username"
+      ],
+      "title": "ReviewUser"
+    }
+  }
+}

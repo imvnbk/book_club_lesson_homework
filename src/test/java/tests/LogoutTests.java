@@ -1,6 +1,6 @@
 package tests;
 
-import io.restassured.http.ContentType;
+import client.ApiClient;
 import models.login.LoginRequestModel;
 import models.logout.LogoutRequestModel;
 import models.logout.NotValidTokenResponseModel;
@@ -10,9 +10,7 @@ import specs.logout.EmptyRequestModel;
 
 import static data.TestData.*;
 import static io.qameta.allure.Allure.step;
-import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
-import static specs.login.LoginSpec.loginRequestSpec;
 import static specs.login.LoginSpec.successfulLoginResponseSpec;
 import static specs.logout.LogoutSpec.*;
 
@@ -25,11 +23,7 @@ public class LogoutTests extends TestBase {
         LoginRequestModel data = new LoginRequestModel(USERNAME, PASSWORD);
 
         String refreshToken = step("Авторизоваться и получить refresh токен", () ->
-                given(loginRequestSpec)
-                        .body(data)
-                        .when()
-                        .post("auth/token/")
-                        .then()
+                ApiClient.login(data)
                         .spec(successfulLoginResponseSpec)
                         .extract()
                         .path("refresh"));
@@ -38,14 +32,7 @@ public class LogoutTests extends TestBase {
                 new LogoutRequestModel(refreshToken);
 
         String responseBody = step("Выполнить логаут с полученным refresh токеном", () ->
-                given()
-                        .log().all()
-                        .contentType(ContentType.JSON)
-                        .basePath("api/v1/")
-                        .body(logoutData)
-                        .when()
-                        .post("auth/logout/")
-                        .then()
+                ApiClient.logout(logoutData)
                         .spec(successfulLogoutResponseSpec)
                         .extract()
                         .asString());
@@ -62,11 +49,7 @@ public class LogoutTests extends TestBase {
                 new LoginRequestModel(USERNAME, PASSWORD);
 
         String refreshToken = step("Авторизоваться и получить refresh токен", () ->
-                given(loginRequestSpec)
-                        .body(data)
-                        .when()
-                        .post("auth/token/")
-                        .then()
+                ApiClient.login(data)
                         .spec(successfulLoginResponseSpec)
                         .extract()
                         .path("refresh"));
@@ -75,19 +58,11 @@ public class LogoutTests extends TestBase {
                 new LogoutRequestModel(refreshToken);
 
         step("Выполнить первый логаут с refresh токеном", () ->
-                given(logoutRequestSpec)
-                        .body(logoutData)
-                        .when()
-                        .post("auth/logout/")
-                        .then()
+                ApiClient.logout(logoutData)
                         .statusCode(200));
 
         NotValidTokenResponseModel responseBody = step("Повторно отправить логаут с уже использованным токеном", () ->
-                given(logoutRequestSpec)
-                        .body(logoutData)
-                        .when()
-                        .post("auth/logout/")
-                        .then()
+                ApiClient.logout(logoutData)
                         .spec(notValidTokenResponseSpec)
                         .extract().as(NotValidTokenResponseModel.class));
 
@@ -108,11 +83,7 @@ public class LogoutTests extends TestBase {
                 new LogoutRequestModel("");
 
         EmptyRequestModel responseBody = step("Отправить логаут с пустым refresh токеном", () ->
-                given(logoutRequestSpec)
-                        .body(logoutData)
-                        .when()
-                        .post("auth/logout/")
-                        .then()
+                ApiClient.logout(logoutData)
                         .spec(emptyBodyResponseSpec)
                         .extract()
                         .as(EmptyRequestModel.class));

@@ -1,5 +1,6 @@
 package tests;
 
+import client.ApiClient;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import models.registration.*;
@@ -9,7 +10,6 @@ import org.junit.jupiter.api.Test;
 
 import static data.TestData.*;
 import static io.qameta.allure.Allure.step;
-import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static specs.registration.RegistrationSpec.*;
 
@@ -32,11 +32,7 @@ public class RegistrationTests extends TestBase{
                 new RegistrationBodyModel(username, password);
 
         RegistrationResponseModel registrationResponse = step("Зарегистрировать нового пользователя с валидными данными", () ->
-                given(registrationRequestSpec)
-                        .body(data)
-                        .when()
-                        .post("users/register/")
-                        .then()
+                ApiClient.register(data)
                         .spec(successfulRegistrationResponseSpec)
                         .extract()
                         .as(RegistrationResponseModel.class));
@@ -69,11 +65,7 @@ public class RegistrationTests extends TestBase{
                 new RegistrationBodyModel(username, password);
 
         String location = step("Отправить запрос регистрации без завершающего слеша в URL", () ->
-                given(registrationRequestSpec)
-                        .body(data)
-                        .when()
-                        .post("users/register")
-                        .then()
+                ApiClient.registerWithoutTrailingSlash(data)
                         .spec(withoutTrailingSlashRegistrationResponseSpec)
                         .extract()
                         .header("Location"));
@@ -94,11 +86,7 @@ public class RegistrationTests extends TestBase{
                 new ObjectMapper().writeValueAsString(data));
 
         UnsupportedMediaTypeResponseModel response = step("Отправить запрос регистрации с неподдерживаемым Content-Type", () ->
-                given(unsupportedMediaTypeRegistrationRequestSpec)
-                        .body(body)
-                        .when()
-                        .post("users/register/")
-                        .then()
+                ApiClient.registerWithUnsupportedMediaType(body)
                         .spec(unsupportedMediaTypeRegistrationResponseSpec)
                         .extract()
                         .as(UnsupportedMediaTypeResponseModel.class));
@@ -115,11 +103,7 @@ public class RegistrationTests extends TestBase{
                 new RegistrationBodyModel(INVALID_USERNAME, password);
 
         String actualError = step("Отправить запрос регистрации с невалидным username", () ->
-                given(registrationRequestSpec)
-                        .body(data)
-                        .when()
-                        .post("users/register/")
-                        .then()
+                ApiClient.register(data)
                         .spec(invalidUsernameRegistrationResponseSpec)
                         .extract()
                         .path("username[0]"));
@@ -136,19 +120,11 @@ public class RegistrationTests extends TestBase{
         RegistrationBodyModel data = new RegistrationBodyModel(username, password);
 
         step("Зарегистрировать пользователя первый раз", () ->
-                given(registrationRequestSpec)
-                        .body(data)
-                        .when()
-                        .post("users/register/")
-                        .then()
+                ApiClient.register(data)
                         .spec(successfulRegistrationResponseSpec));
 
         ExistingUserResponseModel response = step("Повторно зарегистрировать того же пользователя", () ->
-                given(registrationRequestSpec)
-                        .body(data)
-                        .when()
-                        .post("users/register/")
-                        .then()
+                ApiClient.register(data)
                         .spec(existingUserRegistrationResponseSpec)
                         .extract()
                         .as(ExistingUserResponseModel.class));

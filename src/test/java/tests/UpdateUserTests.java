@@ -1,5 +1,6 @@
 package tests;
 
+import client.ApiClient;
 import models.login.LoginRequestModel;
 import models.login.SuccessfulLoginResponseModel;
 import models.user.UpdateUserRequestModel;
@@ -10,12 +11,9 @@ import org.junit.jupiter.api.Test;
 
 import static data.TestData.*;
 import static io.qameta.allure.Allure.step;
-import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
-import static specs.login.LoginSpec.loginRequestSpec;
 import static specs.login.LoginSpec.successfulLoginResponseSpec;
 import static specs.user.UpdateUserSpec.successfulUpdateUserResponseSpec;
-import static specs.user.UpdateUserSpec.updateUserRequestSpec;
 
 public class UpdateUserTests extends TestBase {
 
@@ -38,11 +36,7 @@ public class UpdateUserTests extends TestBase {
                 new LoginRequestModel(USERNAME, PASSWORD);
 
         SuccessfulLoginResponseModel loginResponse = step("Авторизоваться и получить access токен", () ->
-                given(loginRequestSpec)
-                        .body(data)
-                        .when()
-                        .post("auth/token/")
-                        .then()
+                ApiClient.login(data)
                         .spec(successfulLoginResponseSpec)
                         .extract()
                         .as(SuccessfulLoginResponseModel.class));
@@ -55,13 +49,7 @@ public class UpdateUserTests extends TestBase {
                 );
 
         UpdateUserResponseModel response = step("Обновить профиль пользователя новыми данными", () ->
-                given(updateUserRequestSpec)
-                        .auth()
-                        .oauth2(loginResponse.access())
-                        .body(updateUserData)
-                        .when()
-                        .patch("users/me/")
-                        .then()
+                ApiClient.updateUser(loginResponse.access(), updateUserData)
                         .spec(successfulUpdateUserResponseSpec)
                         .extract()
                         .as(UpdateUserResponseModel.class));
