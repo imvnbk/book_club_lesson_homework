@@ -41,7 +41,7 @@ public class ClubsTests extends TestBase {
                         .spec(successfulLoginResponseSpec)
                         .extract()
                         .as(SuccessfulLoginResponseModel.class)
-                        .access());пш
+                        .access());
     }
 
     @Test
