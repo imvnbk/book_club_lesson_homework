@@ -1,5 +1,6 @@
 package client;
 
+import io.qameta.allure.Step;
 import io.restassured.response.ValidatableResponse;
 import models.clubs.ClubRequestModel;
 import models.login.LoginRequestModel;
@@ -17,6 +18,7 @@ import static specs.user.UpdateUserSpec.updateUserRequestSpec;
 
 public class ApiClient {
 
+    @Step("Авторизоваться по логину и паролю")
     public static ValidatableResponse login(LoginRequestModel data) {
         return given(loginRequestSpec)
                 .body(data)
@@ -25,6 +27,7 @@ public class ApiClient {
                 .then();
     }
 
+    @Step("Выйти из системы")
     public static ValidatableResponse logout(LogoutRequestModel data) {
         return given(logoutRequestSpec)
                 .body(data)
@@ -33,6 +36,7 @@ public class ApiClient {
                 .then();
     }
 
+    @Step("Зарегистрировать нового пользователя")
     public static ValidatableResponse register(RegistrationBodyModel data) {
         return given(registrationRequestSpec)
                 .body(data)
@@ -41,6 +45,7 @@ public class ApiClient {
                 .then();
     }
 
+    @Step("Зарегистрировать нового пользователя без слэша в конце пути")
     public static ValidatableResponse registerWithoutTrailingSlash(RegistrationBodyModel data) {
         return given(registrationRequestSpec)
                 .body(data)
@@ -49,6 +54,7 @@ public class ApiClient {
                 .then();
     }
 
+    @Step("Зарегистрировать нового пользователя с неподдерживаемым типом контента")
     public static ValidatableResponse registerWithUnsupportedMediaType(String rawBody) {
         return given(unsupportedMediaTypeRegistrationRequestSpec)
                 .body(rawBody)
@@ -57,6 +63,7 @@ public class ApiClient {
                 .then();
     }
 
+    @Step("Обновить данные текущего пользователя")
     public static ValidatableResponse updateUser(String accessToken, UpdateUserRequestModel data) {
         return given(updateUserRequestSpec)
                 .auth().oauth2(accessToken)
@@ -66,6 +73,7 @@ public class ApiClient {
                 .then();
     }
 
+    @Step("Получить список клубов")
     public static ValidatableResponse getClubs() {
         return given(clubsRequestSpec)
                 .when()
@@ -73,6 +81,7 @@ public class ApiClient {
                 .then();
     }
 
+    @Step("Получить список клубов, страница {page}")
     public static ValidatableResponse getClubs(int page) {
         return given(clubsRequestSpec)
                 .queryParam("page", page)
@@ -81,6 +90,7 @@ public class ApiClient {
                 .then();
     }
 
+    @Step("Создать клуб от имени авторизованного пользователя")
     public static ValidatableResponse createClub(String accessToken, ClubRequestModel data) {
         return given(clubsRequestSpec)
                 .auth().oauth2(accessToken)
@@ -90,6 +100,7 @@ public class ApiClient {
                 .then();
     }
 
+    @Step("Создать клуб без авторизации")
     public static ValidatableResponse createClub(ClubRequestModel data) {
         return given(clubsRequestSpec)
                 .body(data)
@@ -98,6 +109,7 @@ public class ApiClient {
                 .then();
     }
 
+    @Step("Получить клуб по id {id}")
     public static ValidatableResponse getClub(int id) {
         return given(clubsRequestSpec)
                 .when()
@@ -105,6 +117,7 @@ public class ApiClient {
                 .then();
     }
 
+    @Step("Полностью обновить клуб {id} (PUT)")
     public static ValidatableResponse updateClub(String accessToken, int id, ClubRequestModel data) {
         return given(clubsRequestSpec)
                 .auth().oauth2(accessToken)
@@ -114,6 +127,7 @@ public class ApiClient {
                 .then();
     }
 
+    @Step("Частично обновить клуб {id} (PATCH)")
     public static ValidatableResponse patchClub(String accessToken, int id, ClubRequestModel data) {
         return given(clubsRequestSpec)
                 .auth().oauth2(accessToken)
@@ -123,6 +137,7 @@ public class ApiClient {
                 .then();
     }
 
+    @Step("Удалить клуб {id}")
     public static ValidatableResponse deleteClub(String accessToken, int id) {
         return given(clubsRequestSpec)
                 .auth().oauth2(accessToken)
