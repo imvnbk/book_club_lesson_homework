@@ -12,6 +12,7 @@ public class TestData {
     public static final String WRONG_PASSWORD = "wrongPassword";
 
     // Registration inputs
+    public static final int NON_EXISTING_REVIEW_ID = 999999999;
     public static final String INVALID_USERNAME = "invalid username";
 
     // Expected values
@@ -68,5 +69,17 @@ public class TestData {
 
     public static String randomTelegramChatLink() {
         return "https://t.me/" + faker.internet().username();
+    }
+
+    public static String randomReview() {
+        return faker.lorem().sentence();
+    }
+
+    public static Integer randomAssessment() {
+        return faker.number().numberBetween(1, 6);
+    }
+
+    public static Integer randomReadPages() {
+        return faker.number().numberBetween(0, 1000);
     }
 }

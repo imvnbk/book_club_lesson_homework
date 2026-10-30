@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "$ref": "#/definitions/ReviewsPage",
+  "definitions": {
+    "ReviewsPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "count": { "type": "integer" },
+        "next": { "type": ["string", "null"] },
+        "previous": { "type": ["string", "null"] },
+        "results": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Review" }
+        }
+      },
+      "required": ["count", "next", "previous", "results"],
+      "title": "ReviewsPage"
+    },
+    "Review": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "integer" },
+        "club": { "type": "integer" },
+        "user": { "$ref": "#/definitions/ReviewUser" },
+        "review": { "type": "string" },
+        "assessment": { "type": "integer" },
+        "readPages": { "type": "integer" },
+        "created": { "type": "string", "format": "date-time" },
+        "modified": { "type": ["string", "null"], "format": "date-time" }
+      },
+      "required": ["assessment", "club", "created", "id", "modified", "readPages", "review", "user"],
+      "title": "Review"
+    },
+    "ReviewUser": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "integer" },
+        "username": { "type": "string" }
+      },
+      "required": ["id", "username"],
+      "title": "ReviewUser"
+    }
+  }
+}

@@ -6,7 +6,10 @@ import models.clubs.ClubRequestModel;
 import models.login.LoginRequestModel;
 import models.logout.LogoutRequestModel;
 import models.registration.RegistrationBodyModel;
+import models.reviews.ReviewRequestModel;
 import models.user.UpdateUserRequestModel;
+
+import java.util.Map;
 
 import static io.restassured.RestAssured.given;
 import static specs.clubs.ClubsSpec.clubsRequestSpec;
@@ -14,6 +17,7 @@ import static specs.login.LoginSpec.loginRequestSpec;
 import static specs.logout.LogoutSpec.logoutRequestSpec;
 import static specs.registration.RegistrationSpec.registrationRequestSpec;
 import static specs.registration.RegistrationSpec.unsupportedMediaTypeRegistrationRequestSpec;
+import static specs.reviews.ReviewsSpec.reviewsRequestSpec;
 import static specs.user.UpdateUserSpec.updateUserRequestSpec;
 
 public class ApiClient {
@@ -143,6 +147,108 @@ public class ApiClient {
                 .auth().oauth2(accessToken)
                 .when()
                 .delete("clubs/{id}/", id)
+                .then();
+    }
+
+    @Step("Получить список отзывов клуба {club}")
+    public static ValidatableResponse getReviews(int club) {
+        return given(reviewsRequestSpec)
+                .queryParam("club", club)
+                .when()
+                .get("clubs/reviews/")
+                .then();
+    }
+
+    @Step("Получить список отзывов клуба {club}, страница {page}, размер страницы {pageSize}")
+    public static ValidatableResponse getReviews(int club, int page, int pageSize) {
+        return given(reviewsRequestSpec)
+                .queryParam("club", club)
+                .queryParam("page", page)
+                .queryParam("page_size", pageSize)
+                .when()
+                .get("clubs/reviews/")
+                .then();
+    }
+
+    @Step("Получить отзыв по id {id}")
+    public static ValidatableResponse getReview(int id) {
+        return given(reviewsRequestSpec)
+                .when()
+                .get("clubs/reviews/{id}/", id)
+                .then();
+    }
+
+    @Step("Создать отзыв от имени авторизованного пользователя")
+    public static ValidatableResponse createReview(String accessToken, ReviewRequestModel data) {
+        return given(reviewsRequestSpec)
+                .auth().oauth2(accessToken)
+                .body(data)
+                .when()
+                .post("clubs/reviews/")
+                .then();
+    }
+
+    @Step("Создать отзыв без авторизации")
+    public static ValidatableResponse createReview(ReviewRequestModel data) {
+        return given(reviewsRequestSpec)
+                .body(data)
+                .when()
+                .post("clubs/reviews/")
+                .then();
+    }
+
+    @Step("Полностью обновить отзыв {id} (PUT)")
+    public static ValidatableResponse updateReview(String accessToken, int id, ReviewRequestModel data) {
+        return given(reviewsRequestSpec)
+                .auth().oauth2(accessToken)
+                .body(data)
+                .when()
+                .put("clubs/reviews/{id}/", id)
+                .then();
+    }
+
+    @Step("Полностью обновить отзыв {id} без авторизации (PUT)")
+    public static ValidatableResponse updateReview(int id, ReviewRequestModel data) {
+        return given(reviewsRequestSpec)
+                .body(data)
+                .when()
+                .put("clubs/reviews/{id}/", id)
+                .then();
+    }
+
+    @Step("Частично обновить отзыв {id} (PATCH)")
+    public static ValidatableResponse patchReview(String accessToken, int id, Map<String, Object> data) {
+        return given(reviewsRequestSpec)
+                .auth().oauth2(accessToken)
+                .body(data)
+                .when()
+                .patch("clubs/reviews/{id}/", id)
+                .then();
+    }
+
+    @Step("Частично обновить отзыв {id} без авторизации (PATCH)")
+    public static ValidatableResponse patchReview(int id, Map<String, Object> data) {
+        return given(reviewsRequestSpec)
+                .body(data)
+                .when()
+                .patch("clubs/reviews/{id}/", id)
+                .then();
+    }
+
+    @Step("Удалить отзыв {id}")
+    public static ValidatableResponse deleteReview(String accessToken, int id) {
+        return given(reviewsRequestSpec)
+                .auth().oauth2(accessToken)
+                .when()
+                .delete("clubs/reviews/{id}/", id)
+                .then();
+    }
+
+    @Step("Удалить отзыв {id} без авторизации")
+    public static ValidatableResponse deleteReview(int id) {
+        return given(reviewsRequestSpec)
+                .when()
+                .delete("clubs/reviews/{id}/", id)
                 .then();
     }
 }
