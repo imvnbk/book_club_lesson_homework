@@ -377,6 +377,74 @@ public class ReviewsTests extends TestBase {
                 assertThat(getReviewById(created.id())).isEqualTo(created));
     }
 
+    // ---------- Права владельца клуба ----------
+    // Допущение: права на отзыв есть только у его автора, владелец клуба не исключение.
+
+    @Test
+    @DisplayName("Владелец клуба может оставить отзыв на собственный клуб")
+    public void ownerCreatesReviewInOwnClubTest() {
+
+        int clubId = createClubId();
+        String ownerToken = login(USERNAME, PASSWORD);
+
+        ReviewModel response = createReview(ownerToken, clubId);
+
+        step("Проверить, что отзыв создан в собственном клубе владельца", () -> {
+            assertThat(response.club()).isEqualTo(clubId);
+            assertThat(response.user().username()).isEqualTo(USERNAME);
+            assertThat(response.review()).isEqualTo(review);
+        });
+    }
+
+    @Test
+    @DisplayName("Ошибка 403 при обновлении (PUT) отзыва участника владельцем клуба")
+    public void ownerUpdatesForeignReviewTest() {
+
+        int clubId = createClubId();
+        ReviewModel created = createReview(registerUserAndGetToken(), clubId);
+        String ownerToken = login(USERNAME, PASSWORD);
+
+        step("Обновить чужой отзыв от имени владельца клуба", () ->
+                ApiClient.updateReview(ownerToken, created.id(),
+                                new ReviewRequestModel(clubId, randomReview(), randomAssessment(), randomReadPages()))
+                        .spec(reviewForbiddenResponseSpec));
+
+        step("Проверить, что отзыв не изменился", () ->
+                assertThat(getReviewById(created.id())).isEqualTo(created));
+    }
+
+    @Test
+    @DisplayName("Ошибка 403 при частичном обновлении (PATCH) отзыва участника владельцем клуба")
+    public void ownerPatchesForeignReviewTest() {
+
+        int clubId = createClubId();
+        ReviewModel created = createReview(registerUserAndGetToken(), clubId);
+        String ownerToken = login(USERNAME, PASSWORD);
+
+        step("Изменить текст чужого отзыва от имени владельца клуба", () ->
+                ApiClient.patchReview(ownerToken, created.id(), Map.of("review", randomReview()))
+                        .spec(reviewForbiddenResponseSpec));
+
+        step("Проверить, что отзыв не изменился", () ->
+                assertThat(getReviewById(created.id())).isEqualTo(created));
+    }
+
+    @Test
+    @DisplayName("Ошибка 403 при удалении отзыва участника владельцем клуба")
+    public void ownerDeletesForeignReviewTest() {
+
+        int clubId = createClubId();
+        ReviewModel created = createReview(registerUserAndGetToken(), clubId);
+        String ownerToken = login(USERNAME, PASSWORD);
+
+        step("Удалить чужой отзыв от имени владельца клуба", () ->
+                ApiClient.deleteReview(ownerToken, created.id())
+                        .spec(reviewForbiddenResponseSpec));
+
+        step("Проверить, что отзыв по-прежнему существует", () ->
+                assertThat(getReviewById(created.id())).isEqualTo(created));
+    }
+
     private ReviewModel getReviewById(int id) {
         return step("Получить отзыв по id " + id, () ->
                 ApiClient.getReview(id)
