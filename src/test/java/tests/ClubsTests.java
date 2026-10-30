@@ -8,6 +8,7 @@ import models.clubs.ClubsPageResponseModel;
 import models.clubs.ExistingBookTitleResponseModel;
 import models.login.LoginRequestModel;
 import models.login.SuccessfulLoginResponseModel;
+import models.registration.RegistrationBodyModel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,7 @@ import static io.qameta.allure.Allure.step;
 import static org.assertj.core.api.Assertions.assertThat;
 import static specs.clubs.ClubsSpec.*;
 import static specs.login.LoginSpec.successfulLoginResponseSpec;
+import static specs.registration.RegistrationSpec.successfulRegistrationResponseSpec;
 
 public class ClubsTests extends TestBase {
 
@@ -259,5 +261,206 @@ public class ClubsTests extends TestBase {
         step("Удалить созданный клуб", () ->
                 ApiClient.deleteClub(accessToken, createdClub.id())
                         .spec(clubDeletedResponseSpec));
+    }
+
+    // ---------- Негативные сценарии и права ----------
+    // Допущение: коды 400 / 401 / 403 / 404 выведены по аналогии с отзывами и логикой DRF.
+
+    private ClubRequestModel validClubData() {
+        return new ClubRequestModel(bookTitle, bookAuthors, publicationYear, description, telegramChatLink);
+    }
+
+    private ClubRequestModel randomClubData() {
+        return new ClubRequestModel(
+                randomBookTitle(), randomBookAuthors(), randomPublicationYear(), randomDescription(), randomTelegramChatLink());
+    }
+
+    private ClubModel createClubAs(String accessToken, ClubRequestModel data) {
+        return step("Создать книжный клуб", () ->
+                ApiClient.createClub(accessToken, data)
+                        .spec(successfulClubCreationResponseSpec)
+                        .extract()
+                        .as(ClubModel.class));
+    }
+
+    private ClubModel getClubById(int id) {
+        return step("Получить клуб по id " + id, () ->
+                ApiClient.getClub(id)
+                        .spec(successfulClubResponseSpec)
+                        .extract()
+                        .as(ClubModel.class));
+    }
+
+    private String registerStrangerAndGetToken() {
+        return step("Зарегистрировать постороннего пользователя и получить access токен", () -> {
+            String username = randomUsername();
+            ApiClient.register(new RegistrationBodyModel(username, PASSWORD))
+                    .spec(successfulRegistrationResponseSpec);
+            return ApiClient.login(new LoginRequestModel(username, PASSWORD))
+                    .spec(successfulLoginResponseSpec)
+                    .extract()
+                    .as(SuccessfulLoginResponseModel.class)
+                    .access();
+        });
+    }
+
+    @Test
+    @DisplayName("Ошибка 400 при создании клуба с пустым названием книги")
+    public void createClubWithBlankBookTitleTest() {
+
+        String accessToken = getAccessToken();
+
+        step("Отправить запрос на создание клуба с пустым названием", () ->
+                ApiClient.createClub(accessToken,
+                                new ClubRequestModel("", bookAuthors, publicationYear, description, telegramChatLink))
+                        .spec(clubValidationErrorResponseSpec));
+    }
+
+    @Test
+    @DisplayName("Ошибка 400 при создании клуба без обязательных полей")
+    public void createClubWithoutRequiredFieldsTest() {
+
+        String accessToken = getAccessToken();
+
+        step("Отправить запрос на создание клуба без данных", () ->
+                ApiClient.createClub(accessToken, new ClubRequestModel(null, null, null, null, null))
+                        .spec(clubValidationErrorResponseSpec));
+    }
+
+    @Test
+    @DisplayName("Ошибка 400 при обновлении клуба названием книги другого клуба")
+    public void updateClubWithExistingBookTitleTest() {
+
+        String accessToken = getAccessToken();
+
+        ClubModel first = createClubAs(accessToken, validClubData());
+        ClubModel second = createClubAs(accessToken, randomClubData());
+
+        ExistingBookTitleResponseModel response = step("Обновить второй клуб названием книги первого", () ->
+                ApiClient.updateClub(accessToken, second.id(), new ClubRequestModel(
+                                first.bookTitle(), second.bookAuthors(), second.publicationYear(),
+                                second.description(), second.telegramChatLink()))
+                        .spec(existingBookTitleClubResponseSpec)
+                        .extract()
+                        .as(ExistingBookTitleResponseModel.class));
+
+        step("Проверить сообщение об ошибке дублирующегося названия книги", () ->
+                assertThat(response.bookTitle()).containsExactly(EXISTING_BOOK_TITLE_ERROR));
+    }
+
+    @Test
+    @DisplayName("Ошибка 404 при запросе несуществующего клуба")
+    public void getNonExistingClubTest() {
+
+        ClubUnauthorizedResponseModel response = step("Запросить клуб с несуществующим id", () ->
+                ApiClient.getClub(NON_EXISTING_CLUB_ID)
+                        .spec(clubNotFoundResponseSpec)
+                        .extract()
+                        .as(ClubUnauthorizedResponseModel.class));
+
+        step("Проверить, что в ответе есть сообщение об ошибке", () ->
+                assertThat(response.detail()).isNotBlank());
+    }
+
+    @Test
+    @DisplayName("Удалённый клуб недоступен по id")
+    public void getDeletedClubTest() {
+
+        String accessToken = getAccessToken();
+        ClubModel created = createClubAs(accessToken, validClubData());
+
+        step("Удалить клуб", () ->
+                ApiClient.deleteClub(accessToken, created.id())
+                        .spec(clubDeletedResponseSpec));
+
+        step("Проверить, что клуб больше не доступен", () ->
+                ApiClient.getClub(created.id())
+                        .spec(clubNotFoundResponseSpec));
+    }
+
+    @Test
+    @DisplayName("Ошибка 404 при запросе страницы списка клубов за пределами диапазона")
+    public void getClubsPageOutOfRangeTest() {
+
+        step("Запросить несуществующую страницу списка клубов", () ->
+                ApiClient.getClubs(NON_EXISTING_PAGE)
+                        .spec(clubNotFoundResponseSpec));
+    }
+
+    @Test
+    @DisplayName("Ошибка 401 при обновлении (PUT) и частичном обновлении (PATCH) клуба без авторизации")
+    public void updateClubWithoutAuthTest() {
+
+        ClubModel created = createClubAs(getAccessToken(), validClubData());
+
+        step("Отправить PUT без токена", () ->
+                ApiClient.updateClub(created.id(), randomClubData())
+                        .spec(clubUnauthorizedResponseSpec));
+
+        step("Отправить PATCH без токена", () ->
+                ApiClient.patchClub(created.id(), randomClubData())
+                        .spec(clubUnauthorizedResponseSpec));
+
+        step("Проверить, что клуб не изменился", () ->
+                assertThat(getClubById(created.id()).bookTitle()).isEqualTo(created.bookTitle()));
+    }
+
+    @Test
+    @DisplayName("Ошибка 401 при удалении клуба без авторизации")
+    public void deleteClubWithoutAuthTest() {
+
+        ClubModel created = createClubAs(getAccessToken(), validClubData());
+
+        step("Отправить DELETE без токена", () ->
+                ApiClient.deleteClub(created.id())
+                        .spec(clubUnauthorizedResponseSpec));
+
+        step("Проверить, что клуб по-прежнему существует", () ->
+                assertThat(getClubById(created.id()).id()).isEqualTo(created.id()));
+    }
+
+    @Test
+    @DisplayName("Ошибка 403 при обновлении (PUT) чужого клуба")
+    public void updateForeignClubTest() {
+
+        ClubModel created = createClubAs(getAccessToken(), validClubData());
+        String strangerToken = registerStrangerAndGetToken();
+
+        step("Обновить чужой клуб другим пользователем", () ->
+                ApiClient.updateClub(strangerToken, created.id(), randomClubData())
+                        .spec(clubForbiddenResponseSpec));
+
+        step("Проверить, что клуб не изменился", () ->
+                assertThat(getClubById(created.id()).bookTitle()).isEqualTo(created.bookTitle()));
+    }
+
+    @Test
+    @DisplayName("Ошибка 403 при частичном обновлении (PATCH) чужого клуба")
+    public void patchForeignClubTest() {
+
+        ClubModel created = createClubAs(getAccessToken(), validClubData());
+        String strangerToken = registerStrangerAndGetToken();
+
+        step("Изменить чужой клуб другим пользователем", () ->
+                ApiClient.patchClub(strangerToken, created.id(), randomClubData())
+                        .spec(clubForbiddenResponseSpec));
+
+        step("Проверить, что клуб не изменился", () ->
+                assertThat(getClubById(created.id()).bookTitle()).isEqualTo(created.bookTitle()));
+    }
+
+    @Test
+    @DisplayName("Ошибка 403 при удалении чужого клуба")
+    public void deleteForeignClubTest() {
+
+        ClubModel created = createClubAs(getAccessToken(), validClubData());
+        String strangerToken = registerStrangerAndGetToken();
+
+        step("Удалить чужой клуб другим пользователем", () ->
+                ApiClient.deleteClub(strangerToken, created.id())
+                        .spec(clubForbiddenResponseSpec));
+
+        step("Проверить, что клуб по-прежнему существует", () ->
+                assertThat(getClubById(created.id()).id()).isEqualTo(created.id()));
     }
 }

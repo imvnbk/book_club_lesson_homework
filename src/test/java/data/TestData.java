@@ -13,6 +13,8 @@ public class TestData {
 
     // Registration inputs
     public static final int NON_EXISTING_REVIEW_ID = 999999999;
+    public static final int NON_EXISTING_CLUB_ID = 999999999;
+    public static final int NON_EXISTING_PAGE = 999999;
     public static final String INVALID_USERNAME = "invalid username";
 
     // Expected values
@@ -32,6 +34,7 @@ public class TestData {
             "Unsupported media type \"text/plain; charset=ISO-8859-1\" in request.";
     public static final String EXISTING_USER_ERROR = "A user with that username already exists.";
     public static final String AUTH_CREDENTIALS_NOT_PROVIDED_ERROR = "Authentication credentials were not provided.";
+    public static final String LEAVE_CLUB_ERROR = "Не удалось покинуть клуб";
     public static final String EXISTING_BOOK_TITLE_ERROR = "Book Club with this Book Title already exists.";
 
     // Random generators

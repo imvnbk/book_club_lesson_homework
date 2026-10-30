@@ -45,4 +45,17 @@ public class ClubsSpec {
             .expectBody(matchesJsonSchemaInClasspath(
                     "schemas/clubs/existing_book_title_response_schema.json"))
             .build();
+
+    public static ResponseSpecification clubForbiddenResponseSpec = baseResponseSpec(403)
+            .expectBody(matchesJsonSchemaInClasspath(
+                    "schemas/clubs/club_unauthorized_response_schema.json"))
+            .build();
+
+    public static ResponseSpecification clubNotFoundResponseSpec = baseResponseSpec(404)
+            .expectBody(matchesJsonSchemaInClasspath(
+                    "schemas/clubs/club_unauthorized_response_schema.json"))
+            .build();
+
+    public static ResponseSpecification clubValidationErrorResponseSpec = baseResponseSpec(400)
+            .build();
 }

@@ -141,6 +141,32 @@ public class ApiClient {
                 .then();
     }
 
+    @Step("Полностью обновить клуб {id} без авторизации (PUT)")
+    public static ValidatableResponse updateClub(int id, ClubRequestModel data) {
+        return given(clubsRequestSpec)
+                .body(data)
+                .when()
+                .put("clubs/{id}/", id)
+                .then();
+    }
+
+    @Step("Частично обновить клуб {id} без авторизации (PATCH)")
+    public static ValidatableResponse patchClub(int id, ClubRequestModel data) {
+        return given(clubsRequestSpec)
+                .body(data)
+                .when()
+                .patch("clubs/{id}/", id)
+                .then();
+    }
+
+    @Step("Удалить клуб {id} без авторизации")
+    public static ValidatableResponse deleteClub(int id) {
+        return given(clubsRequestSpec)
+                .when()
+                .delete("clubs/{id}/", id)
+                .then();
+    }
+
     @Step("Удалить клуб {id}")
     public static ValidatableResponse deleteClub(String accessToken, int id) {
         return given(clubsRequestSpec)

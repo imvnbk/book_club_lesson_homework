@@ -55,3 +55,18 @@ tasks.withType(Test) {
         }
     }
 }
+
+// UI-тесты помечены @Tag("ui") и запускаются отдельно: ./gradlew uiTest
+tasks.named('test') {
+    useJUnitPlatform {
+        excludeTags 'ui'
+    }
+}
+
+tasks.register('uiTest', Test) {
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform {
+        includeTags 'ui'
+    }
+}
